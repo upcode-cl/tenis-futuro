@@ -80,13 +80,13 @@ export function Footer() {
               Contacto
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-white/75">
-              <li>Santiago, Chile</li>
+              <li>Los Vilos, Chile</li>
               <li>
                 <a
-                  href="mailto:contacto@tenisfuturo.cl"
+                  href="mailto:director@tenisfuturo.cl"
                   className="transition hover:text-brand-lime"
                 >
-                  contacto@tenisfuturo.cl
+                  director@tenisfuturo.cl
                 </a>
               </li>
               <li>

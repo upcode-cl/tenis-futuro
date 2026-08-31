@@ -56,8 +56,8 @@ export function Header() {
             <Image
               src="/LogoTenisFuturo.png"
               alt="Tenis Futuro Fundación"
-              width={580}
-              height={580}
+              width={380}
+              height={380}
               priority
               className="relative h-30 w-auto object-contain sm:h-30 md:h-30 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
             />
