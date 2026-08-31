@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // MongoDB + bson: no bundlear con Turbopack; usar require nativo en Lambda
+  serverExternalPackages: ["mongodb", "bson", "bcryptjs"],
   images: {
     remotePatterns: [
       {
