@@ -19,10 +19,18 @@ export type S3Config = {
 };
 
 export function getS3Config(): S3Config | null {
-  const bucket = process.env.S3_BUCKET_NAME;
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-  const region = process.env.AWS_REGION ?? "us-east-1";
+  const bucket =
+    process.env.S3_BUCKET_NAME || process.env.NEXT_PUBLIC_S3_BUCKET_NAME;
+  // NEXT_AWS_* evita chocar con las credenciales que Amplify inyecta como AWS_*
+  const accessKeyId =
+    process.env.NEXT_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey =
+    process.env.NEXT_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+  const region =
+    process.env.NEXT_AWS_REGION ||
+    process.env.NEXT_PUBLIC_AWS_REGION ||
+    process.env.AWS_REGION ||
+    "us-east-1";
 
   if (!bucket || !accessKeyId || !secretAccessKey) {
     return null;
@@ -77,7 +85,7 @@ export async function createPlayerImageUploadUrl(
   const config = getS3Config();
   if (!config) {
     throw new Error(
-      "S3 no configurado. Completa S3_BUCKET_NAME, AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY.",
+      "S3 no configurado. Completa S3_BUCKET_NAME, NEXT_AWS_ACCESS_KEY_ID y NEXT_AWS_SECRET_ACCESS_KEY.",
     );
   }
 

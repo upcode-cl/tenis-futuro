@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return Response.json(
       {
         error:
-          "S3 no configurado. Agrega S3_BUCKET_NAME, AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY.",
+          "S3 no configurado. Agrega S3_BUCKET_NAME, NEXT_AWS_ACCESS_KEY_ID y NEXT_AWS_SECRET_ACCESS_KEY.",
         configured: false,
       },
       { status: 503 },

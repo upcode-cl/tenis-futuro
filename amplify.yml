@@ -10,7 +10,9 @@ frontend:
         # Amplify inyecta vars en el build, pero Next.js SSR no las ve en runtime
         # sin .env.production. Ver: https://docs.aws.amazon.com/amplify/latest/userguide/ssr-environment-variables.html
         - touch .env.production
-        - env | grep -E '^(MONGODB_URI|MONGODB_DB_NAME|ADMIN_SESSION_SECRET|ADMIN_USER|ADMIN_PASSWORD|S3_BUCKET_NAME|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_REGION|S3_PUBLIC_URL_BASE|INSTAGRAM_ACCESS_TOKEN|INSTAGRAM_USER_ID)=' >> .env.production || true
+        # No copiar AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: Amplify las usa
+        # para el build. Las credenciales S3 deben ir como NEXT_AWS_*.
+        - env | grep -E '^(MONGODB_URI|MONGODB_DB_NAME|ADMIN_SESSION_SECRET|ADMIN_USER|ADMIN_PASSWORD|S3_BUCKET_NAME|S3_PUBLIC_URL_BASE|NEXT_AWS_ACCESS_KEY_ID|NEXT_AWS_SECRET_ACCESS_KEY|NEXT_AWS_REGION|INSTAGRAM_ACCESS_TOKEN|INSTAGRAM_USER_ID)=' >> .env.production || true
         - env | grep -E '^NEXT_PUBLIC_' >> .env.production || true
         # Webpack evita el runtime Turbopack en Lambda (más estable con mongodb en Amplify)
         - pnpm run build
