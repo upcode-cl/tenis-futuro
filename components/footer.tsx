@@ -100,7 +100,7 @@ export function Footer() {
 
         <div className="mt-14 border-t border-white/10 pt-6 text-center text-xs text-white/50">
           © {new Date().getFullYear()} Fundación Tenis Futuro. Todos los derechos
-          reservados.
+          reservados. Desarrollado por <a href="https://upcode.cl" target="_blank" rel="noopener noreferrer" className="text-brand-lime">UP CODE E.I.R.L.</a>.
         </div>
       </div>
 
