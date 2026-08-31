@@ -1,0 +1,21 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - corepack enable
+        - pnpm install --frozen-lockfile
+    build:
+      commands:
+        # Webpack evita el runtime Turbopack en Lambda (más estable con mongodb en Amplify)
+        - pnpm run build
+        # Si Turbopack generó .next/node_modules, copia deps faltantes (bson, etc.)
+        - node scripts/resolve-next-symlinks.js
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
