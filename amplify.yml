@@ -7,6 +7,11 @@ frontend:
         - pnpm install --frozen-lockfile
     build:
       commands:
+        # Amplify inyecta vars en el build, pero Next.js SSR no las ve en runtime
+        # sin .env.production. Ver: https://docs.aws.amazon.com/amplify/latest/userguide/ssr-environment-variables.html
+        - touch .env.production
+        - env | grep -E '^(MONGODB_URI|MONGODB_DB_NAME|ADMIN_SESSION_SECRET|ADMIN_USER|ADMIN_PASSWORD|S3_BUCKET_NAME|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_REGION|S3_PUBLIC_URL_BASE|INSTAGRAM_ACCESS_TOKEN|INSTAGRAM_USER_ID)=' >> .env.production || true
+        - env | grep -E '^NEXT_PUBLIC_' >> .env.production || true
         # Webpack evita el runtime Turbopack en Lambda (más estable con mongodb en Amplify)
         - pnpm run build
         # Si Turbopack generó .next/node_modules, copia deps faltantes (bson, etc.)
