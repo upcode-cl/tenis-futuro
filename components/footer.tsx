@@ -90,8 +90,8 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+56900000000" className="transition hover:text-brand-lime">
-                  +56 9 0000 0000
+                <a href="tel:+56990895439" className="transition hover:text-brand-lime">
+                  +56 9 9089 5439
                 </a>
               </li>
             </ul>
@@ -105,7 +105,7 @@ export function Footer() {
       </div>
 
       <a
-        href="https://wa.me/56900000000"
+        href="https://wa.me/56990895439"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-brand-lime px-5 py-3 text-sm font-bold uppercase tracking-wide text-brand-navy shadow-lg shadow-black/25 transition hover:scale-[1.03] hover:bg-brand-lime-dark"
