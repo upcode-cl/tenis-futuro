@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FadeIn } from "@/components/fade-in";
 import { ImageSlot } from "@/components/image-slot";
+import { PlayerRankingStats } from "@/components/player-ranking-stats";
 import type { Player } from "@/lib/types/player";
 
 export function PlayersSection({
@@ -198,12 +199,7 @@ function PlayerCard({ player }: { player: Player }) {
           <h3 className="text-base font-extrabold uppercase tracking-wide text-brand-navy">
             {player.name}
           </h3>
-          <div className="mt-2 space-y-1 text-xs text-brand-muted">
-            <p>{player.location}</p>
-            <p className="font-semibold text-brand-navy">
-              Ranking Nacional: #{player.ranking}
-            </p>
-          </div>
+          <PlayerRankingStats player={player} variant="card" />
 
           {player.highlights[0] && (
             <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-brand-navy/75">

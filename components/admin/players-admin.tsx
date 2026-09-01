@@ -2,13 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Player, PlayerHand, PlayerInput } from "@/lib/types/player";
+import {
+  DEFAULT_PLAYER_CATEGORY,
+  PLAYER_CATEGORIES,
+} from "@/lib/constants/player-categories";
 import { resolvePublicObjectUrl } from "@/lib/s3-public";
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 const EMPTY_FORM: PlayerInput & { id?: string } = {
   name: "",
-  category: "SUB-14",
+  category: DEFAULT_PLAYER_CATEGORY,
   location: "",
   ranking: 1,
+  bestNationalRanking: null,
+  regionalRanking: null,
+  wtnSingles: "",
+  titlesYear: CURRENT_YEAR,
+  singlesTitles: null,
+  doublesTitles: null,
   highlights: ["", "", ""],
   galleryKeys: [],
   bio: "",
@@ -93,6 +105,12 @@ export function PlayersAdmin() {
       category: player.category,
       location: player.location,
       ranking: player.ranking,
+      bestNationalRanking: player.bestNationalRanking ?? null,
+      regionalRanking: player.regionalRanking ?? null,
+      wtnSingles: player.wtnSingles ?? "",
+      titlesYear: player.titlesYear ?? CURRENT_YEAR,
+      singlesTitles: player.singlesTitles ?? null,
+      doublesTitles: player.doublesTitles ?? null,
       highlights:
         player.highlights.length >= 3
           ? player.highlights
@@ -124,6 +142,12 @@ export function PlayersAdmin() {
       category: form.category,
       location: form.location,
       ranking: Number(form.ranking),
+      bestNationalRanking: form.bestNationalRanking,
+      regionalRanking: form.regionalRanking,
+      wtnSingles: form.wtnSingles,
+      titlesYear: form.titlesYear,
+      singlesTitles: form.singlesTitles,
+      doublesTitles: form.doublesTitles,
       highlights: form.highlights,
       galleryKeys,
       imageKey: galleryKeys[0] ?? "",
@@ -339,11 +363,17 @@ export function PlayersAdmin() {
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
             >
-              {["SUB-14", "SUB-16", "SUB-18", "ADULTOS"].map((c) => (
+              {PLAYER_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
+              {form.category &&
+                !PLAYER_CATEGORIES.includes(
+                  form.category as (typeof PLAYER_CATEGORIES)[number],
+                ) && (
+                  <option value={form.category}>{form.category}</option>
+                )}
             </select>
           </Field>
           <Field label="Ubicación">
@@ -354,7 +384,7 @@ export function PlayersAdmin() {
               className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
             />
           </Field>
-          <Field label="Ranking nacional">
+          <Field label="Ranking nacional actual">
             <input
               required
               type="number"
@@ -362,6 +392,95 @@ export function PlayersAdmin() {
               value={form.ranking}
               onChange={(e) =>
                 setForm({ ...form, ranking: Number(e.target.value) })
+              }
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Mejor ranking nacional">
+            <input
+              type="number"
+              min={1}
+              value={form.bestNationalRanking ?? ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  bestNationalRanking: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                })
+              }
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Ranking regional">
+            <input
+              type="number"
+              min={1}
+              value={form.regionalRanking ?? ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  regionalRanking: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                })
+              }
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="WTN Singles">
+            <input
+              value={form.wtnSingles ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, wtnSingles: e.target.value })
+              }
+              placeholder="Ej. 30.31 o Sin registro"
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Año de títulos">
+            <input
+              type="number"
+              min={2000}
+              max={2100}
+              value={form.titlesYear ?? CURRENT_YEAR}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  titlesYear: e.target.value ? Number(e.target.value) : null,
+                })
+              }
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Títulos singles">
+            <input
+              type="number"
+              min={0}
+              value={form.singlesTitles ?? ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  singlesTitles: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                })
+              }
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Títulos dobles">
+            <input
+              type="number"
+              min={0}
+              value={form.doublesTitles ?? ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  doublesTitles: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                })
               }
               className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
             />

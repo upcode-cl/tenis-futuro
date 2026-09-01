@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ImageSlot } from "@/components/image-slot";
+import { PlayerRankingStats } from "@/components/player-ranking-stats";
 import type { Player } from "@/lib/types/player";
 
 export function PlayerProfile({ player }: { player: Player }) {
@@ -94,8 +95,9 @@ export function PlayerProfile({ player }: { player: Player }) {
         </h1>
         <p className="mt-2 text-brand-muted">{player.location}</p>
 
+        <PlayerRankingStats player={player} variant="profile" />
+
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Stat label="Ranking" value={`#${player.ranking}`} />
           <Stat label="Categoría" value={player.category} />
           {player.hand ? <Stat label="Mano" value={player.hand} /> : null}
           {player.heightCm ? (

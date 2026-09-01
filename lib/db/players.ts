@@ -25,6 +25,12 @@ function mapPlayer(doc: WithId<PlayerDocument>): Player {
     category: doc.category,
     location: doc.location,
     ranking: doc.ranking,
+    bestNationalRanking: doc.bestNationalRanking,
+    regionalRanking: doc.regionalRanking,
+    wtnSingles: doc.wtnSingles ?? "",
+    titlesYear: doc.titlesYear,
+    singlesTitles: doc.singlesTitles,
+    doublesTitles: doc.doublesTitles,
     highlights: doc.highlights ?? [],
     imageKey,
     imageSrc: resolvePublicObjectUrl(imageKey),
@@ -75,6 +81,27 @@ function buildDocFromInput(
     category: input.category.trim(),
     location: input.location.trim(),
     ranking: input.ranking,
+    bestNationalRanking:
+      input.bestNationalRanking === null || input.bestNationalRanking === undefined
+        ? undefined
+        : Number(input.bestNationalRanking) || undefined,
+    regionalRanking:
+      input.regionalRanking === null || input.regionalRanking === undefined
+        ? undefined
+        : Number(input.regionalRanking) || undefined,
+    wtnSingles: input.wtnSingles?.trim() || undefined,
+    titlesYear:
+      input.titlesYear === null || input.titlesYear === undefined
+        ? undefined
+        : Number(input.titlesYear) || undefined,
+    singlesTitles:
+      input.singlesTitles === null || input.singlesTitles === undefined
+        ? undefined
+        : Number(input.singlesTitles) || undefined,
+    doublesTitles:
+      input.doublesTitles === null || input.doublesTitles === undefined
+        ? undefined
+        : Number(input.doublesTitles) || undefined,
     highlights: sanitizeHighlights(input.highlights),
     imageKey: galleryKeys[0],
     galleryKeys,
@@ -153,6 +180,39 @@ export async function updatePlayer(
   if (input.category !== undefined) update.category = input.category.trim();
   if (input.location !== undefined) update.location = input.location.trim();
   if (input.ranking !== undefined) update.ranking = input.ranking;
+  if (input.bestNationalRanking !== undefined) {
+    update.bestNationalRanking =
+      input.bestNationalRanking === null
+        ? undefined
+        : Number(input.bestNationalRanking) || undefined;
+  }
+  if (input.regionalRanking !== undefined) {
+    update.regionalRanking =
+      input.regionalRanking === null
+        ? undefined
+        : Number(input.regionalRanking) || undefined;
+  }
+  if (input.wtnSingles !== undefined) {
+    update.wtnSingles = input.wtnSingles.trim() || undefined;
+  }
+  if (input.titlesYear !== undefined) {
+    update.titlesYear =
+      input.titlesYear === null
+        ? undefined
+        : Number(input.titlesYear) || undefined;
+  }
+  if (input.singlesTitles !== undefined) {
+    update.singlesTitles =
+      input.singlesTitles === null
+        ? undefined
+        : Number(input.singlesTitles) || undefined;
+  }
+  if (input.doublesTitles !== undefined) {
+    update.doublesTitles =
+      input.doublesTitles === null
+        ? undefined
+        : Number(input.doublesTitles) || undefined;
+  }
   if (input.highlights !== undefined) {
     update.highlights = sanitizeHighlights(input.highlights);
   }

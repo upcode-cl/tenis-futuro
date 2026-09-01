@@ -5,7 +5,18 @@ export type Player = {
   name: string;
   category: string;
   location: string;
+  /** Ranking nacional actual */
   ranking: number;
+  /** Mejor ranking nacional histórico */
+  bestNationalRanking?: number;
+  /** Ranking regional actual */
+  regionalRanking?: number;
+  /** WTN Singles (número o texto; vacío = sin registro) */
+  wtnSingles?: string;
+  /** Año de los títulos reportados (ej. 2026) */
+  titlesYear?: number;
+  singlesTitles?: number;
+  doublesTitles?: number;
   /** Logros que se muestran en cards / home */
   highlights: string[];
   /** Foto principal (compat + primera de gallery) */
@@ -31,6 +42,12 @@ export type PlayerInput = {
   category: string;
   location: string;
   ranking: number;
+  bestNationalRanking?: number | null;
+  regionalRanking?: number | null;
+  wtnSingles?: string;
+  titlesYear?: number | null;
+  singlesTitles?: number | null;
+  doublesTitles?: number | null;
   highlights: string[];
   imageKey?: string;
   galleryKeys?: string[];
@@ -51,6 +68,12 @@ export type PlayerDocument = {
   category: string;
   location: string;
   ranking: number;
+  bestNationalRanking?: number;
+  regionalRanking?: number;
+  wtnSingles?: string;
+  titlesYear?: number;
+  singlesTitles?: number;
+  doublesTitles?: number;
   highlights: string[];
   /** @deprecated prefer galleryKeys[0] */
   imageKey?: string;

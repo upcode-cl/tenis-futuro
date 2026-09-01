@@ -1,12 +1,18 @@
 import type { PlayerInput } from "@/lib/types/player";
 
-/** Datos iniciales para poblar MongoDB (mismo contenido del mock original) */
+/** Datos iniciales para poblar MongoDB */
 export const SEED_PLAYERS: PlayerInput[] = [
   {
     name: "Matías González",
-    category: "SUB-14",
+    category: "Varones Sub 14",
     location: "Santiago, Chile",
     ranking: 12,
+    bestNationalRanking: 8,
+    regionalRanking: 3,
+    wtnSingles: "33.36",
+    titlesYear: 2026,
+    singlesTitles: 2,
+    doublesTitles: 1,
     highlights: [
       "Campeón Copa Futuro 2025",
       "Finalista Nacional Sub-14",
@@ -15,9 +21,15 @@ export const SEED_PLAYERS: PlayerInput[] = [
   },
   {
     name: "Valentina Rojas",
-    category: "SUB-16",
+    category: "Damas Sub 16",
     location: "Viña del Mar, Chile",
     ranking: 8,
+    bestNationalRanking: 6,
+    regionalRanking: 1,
+    wtnSingles: "30.31",
+    titlesYear: 2026,
+    singlesTitles: 5,
+    doublesTitles: 2,
     highlights: [
       "Campeona Regional 2025",
       "Top 10 Ranking Nacional",
@@ -26,9 +38,15 @@ export const SEED_PLAYERS: PlayerInput[] = [
   },
   {
     name: "Diego Muñoz",
-    category: "SUB-18",
+    category: "Varones Sub 18",
     location: "Concepción, Chile",
     ranking: 5,
+    bestNationalRanking: 4,
+    regionalRanking: 2,
+    wtnSingles: "28.90",
+    titlesYear: 2026,
+    singlesTitles: 3,
+    doublesTitles: 0,
     highlights: [
       "Campeón Nacional Sub-18",
       "ITF Junior Grade 4",
@@ -37,9 +55,10 @@ export const SEED_PLAYERS: PlayerInput[] = [
   },
   {
     name: "Camila Soto",
-    category: "SUB-14",
+    category: "Damas Sub 14",
     location: "La Serena, Chile",
     ranking: 15,
+    regionalRanking: 4,
     highlights: [
       "Finalista Copa Norte",
       "Campeona Dobles Regional",
@@ -48,9 +67,13 @@ export const SEED_PLAYERS: PlayerInput[] = [
   },
   {
     name: "Tomás Herrera",
-    category: "SUB-16",
+    category: "Varones Sub 16",
     location: "Temuco, Chile",
     ranking: 11,
+    wtnSingles: "Sin registro",
+    titlesYear: 2026,
+    singlesTitles: 1,
+    doublesTitles: 1,
     highlights: [
       "Semifinalista Nacional",
       "Campeón Circuito Sur",

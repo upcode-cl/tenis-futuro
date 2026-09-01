@@ -63,7 +63,10 @@ export default async function PlayerPage({ params }: PageProps) {
                       {p.name}
                     </p>
                     <p className="mt-1 text-xs text-brand-muted">
-                      Ranking #{p.ranking}
+                      Ranking nacional #{p.ranking}
+                      {p.regionalRanking != null
+                        ? ` · Regional #${p.regionalRanking}`
+                        : ""}
                     </p>
                   </Link>
                 ))}
