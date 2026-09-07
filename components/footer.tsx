@@ -30,8 +30,8 @@ export function Footer() {
               </div>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
-              Formamos jugadores con propósito: rendimiento, educación y
-              comunidad. Construimos futuro desde la cancha.
+              Formamos personas, transformamos futuros. Desarrollo deportivo y
+              personal para jóvenes de 8 a 18 años a través del tenis.
             </p>
             <div className="mt-5 flex gap-3">
               {["Instagram", "Facebook", "YouTube"].map((network) => (
@@ -61,16 +61,16 @@ export function Footer() {
               title="La Fundación"
               links={[
                 ["Quiénes somos", "#fundacion"],
-                ["Programa", "#programa"],
+                ["Programas", "#programas"],
                 ["Noticias", "#instagram"],
               ]}
             />
             <FooterCol
               title="Apóyanos"
               links={[
-                ["Donar", "#aporte"],
-                ["Colaborar", "#colaborar"],
-                ["Sponsors", "#apoyanos"],
+                ["Por qué apoyar", "#apoyanos"],
+                ["Haz tu aporte", "#contacto"],
+                ["Colaborar", "#contacto"],
               ]}
             />
           </FadeIn>

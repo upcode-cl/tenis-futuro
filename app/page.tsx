@@ -1,8 +1,10 @@
+import { AboutSection } from "@/components/about-section";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { InstagramSection } from "@/components/instagram-section";
 import { PlayersSection } from "@/components/players-section";
+import { ProgramsSection } from "@/components/programs-section";
 import { SupportSection } from "@/components/support-section";
 import { listPlayers } from "@/lib/db/players";
 import { getInstagramPosts } from "@/lib/instagram";
@@ -29,7 +31,9 @@ export default async function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
+        <AboutSection />
         <PlayersSection players={players} error={playersError} />
+        <ProgramsSection />
         <InstagramSection posts={posts} error={instagramError} />
         <SupportSection />
       </main>

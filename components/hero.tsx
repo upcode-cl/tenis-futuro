@@ -49,8 +49,8 @@ export function Hero() {
           transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-3xl text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
         >
-          Formamos jugadores,{" "}
-          <span className="text-brand-lime">construimos futuro</span>
+          Formamos personas,{" "}
+          <span className="text-brand-lime">transformamos futuros</span>
         </motion.h1>
 
         <motion.p
@@ -59,9 +59,9 @@ export function Hero() {
           transition={{ delay: 0.4, duration: 0.55 }}
           className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg"
         >
-          Impulsamos el talento juvenil con entrenamiento de alto nivel,
-          educación y valores. Cada punto en la cancha es una oportunidad de
-          crecimiento.
+          Fundación de desarrollo deportivo y personal para jóvenes de 8 a 18
+          años. El tenis como herramienta para potenciar capacidades, valores y
+          oportunidades.
         </motion.p>
 
         <motion.div

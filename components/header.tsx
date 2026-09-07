@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "#inicio", label: "Inicio" },
+  { href: "#fundacion", label: "Quiénes somos" },
   { href: "#jugadores", label: "Jugadores" },
-  { href: "#fundacion", label: "La Fundación" },
+  { href: "#programas", label: "Programas" },
   { href: "#instagram", label: "Instagram" },
   { href: "#apoyanos", label: "Apóyanos" },
   { href: "#contacto", label: "Contacto" },
@@ -64,7 +65,7 @@ export function Header() {
           </motion.span>
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="hidden items-center gap-4 xl:gap-6 lg:flex">
           {NAV.map((item) => (
             <a
               key={item.href}
