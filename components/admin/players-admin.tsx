@@ -7,6 +7,13 @@ import {
   PLAYER_CATEGORIES,
 } from "@/lib/constants/player-categories";
 import { resolvePublicObjectUrl } from "@/lib/s3-public";
+import {
+  DEFAULT_PLAYER_VIDEO_ORIENTATION,
+  formatBytes,
+  PLAYER_VIDEO_MAX_LABEL,
+  type PlayerVideoOrientation,
+  validatePlayerVideoFile,
+} from "@/lib/constants/player-video";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -23,11 +30,17 @@ const EMPTY_FORM: PlayerInput & { id?: string } = {
   doublesTitles: null,
   highlights: ["", "", ""],
   galleryKeys: [],
+  videoKey: null,
+  videoDurationSec: null,
+  videoSizeBytes: null,
+  videoContentType: null,
+  videoOrientation: DEFAULT_PLAYER_VIDEO_ORIENTATION,
   bio: "",
   birthDate: "",
   hand: "",
   heightCm: null,
   club: "",
+  school: "",
   coach: "",
   playingStyle: "",
   instagram: "",
@@ -45,6 +58,7 @@ export function PlayersAdmin() {
   const [s3Configured, setS3Configured] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const authHeaders = useCallback((): HeadersInit => {
     return { "Content-Type": "application/json" };
@@ -117,11 +131,18 @@ export function PlayersAdmin() {
           : [...player.highlights, "", "", ""].slice(0, 3),
       galleryKeys: player.galleryKeys ?? [],
       imageKey: player.imageKey ?? "",
+      videoKey: player.videoKey ?? null,
+      videoDurationSec: player.videoDurationSec ?? null,
+      videoSizeBytes: player.videoSizeBytes ?? null,
+      videoContentType: player.videoContentType ?? null,
+      videoOrientation:
+        player.videoOrientation ?? DEFAULT_PLAYER_VIDEO_ORIENTATION,
       bio: player.bio ?? "",
       birthDate: player.birthDate ?? "",
       hand: (player.hand as PlayerHand) ?? "",
       heightCm: player.heightCm ?? null,
       club: player.club ?? "",
+      school: player.school ?? "",
       coach: player.coach ?? "",
       playingStyle: player.playingStyle ?? "",
       instagram: player.instagram ?? "",
@@ -151,11 +172,18 @@ export function PlayersAdmin() {
       highlights: form.highlights,
       galleryKeys,
       imageKey: galleryKeys[0] ?? "",
+      videoKey: form.videoKey,
+      videoDurationSec: form.videoDurationSec,
+      videoSizeBytes: form.videoSizeBytes,
+      videoContentType: form.videoContentType,
+      videoOrientation:
+        form.videoOrientation ?? DEFAULT_PLAYER_VIDEO_ORIENTATION,
       bio: form.bio,
       birthDate: form.birthDate,
       hand: form.hand,
       heightCm: form.heightCm,
       club: form.club,
+      school: form.school,
       coach: form.coach,
       playingStyle: form.playingStyle,
       instagram: form.instagram,
@@ -285,6 +313,107 @@ export function PlayersAdmin() {
       await loadPlayers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al eliminar imagen");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleVideoUpload(file: File) {
+    if (!s3Configured) {
+      setError("S3 no configurado.");
+      return;
+    }
+
+    const validationError = validatePlayerVideoFile({
+      size: file.size,
+      type: file.type || "video/mp4",
+    });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setUploadingVideo(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/uploads/player-video", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          playerName: form.name || "jugador",
+          contentType: file.type || "video/mp4",
+          size: file.size,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al preparar subida");
+
+      const uploadRes = await fetch(data.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "video/mp4" },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        throw new Error(
+          `S3 rechazó la subida (${uploadRes.status}). Revisa CORS del bucket.`,
+        );
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        videoKey: data.imageKey,
+        videoSizeBytes: file.size,
+        videoContentType: file.type || "video/mp4",
+        videoDurationSec: prev.videoDurationSec,
+        videoOrientation:
+          prev.videoOrientation ?? DEFAULT_PLAYER_VIDEO_ORIENTATION,
+      }));
+      setMessage(
+        "Video subido a S3. Guarda la ficha para publicarlo en el perfil.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al subir video");
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
+  async function handleRemoveVideo() {
+    if (!confirm("¿Eliminar el video de este jugador?")) return;
+
+    if (!form.id) {
+      setForm((prev) => ({
+        ...prev,
+        videoKey: null,
+        videoDurationSec: null,
+        videoSizeBytes: null,
+        videoContentType: null,
+        videoOrientation: DEFAULT_PLAYER_VIDEO_ORIENTATION,
+      }));
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/players/${form.id}/video`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo eliminar");
+      setForm((prev) => ({
+        ...prev,
+        videoKey: null,
+        videoDurationSec: null,
+        videoSizeBytes: null,
+        videoContentType: null,
+        videoOrientation: DEFAULT_PLAYER_VIDEO_ORIENTATION,
+      }));
+      setMessage("Video eliminado");
+      await loadPlayers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al eliminar video");
     } finally {
       setSaving(false);
     }
@@ -506,6 +635,14 @@ export function PlayersAdmin() {
               className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
             />
           </Field>
+          <Field label="Colegio">
+            <input
+              value={form.school ?? ""}
+              onChange={(e) => setForm({ ...form, school: e.target.value })}
+              placeholder="Ej. Colegio San Agustín"
+              className="w-full rounded-md border border-brand-navy/15 px-3 py-2 text-sm"
+            />
+          </Field>
           <Field label="Entrenador">
             <input
               value={form.coach ?? ""}
@@ -638,6 +775,116 @@ export function PlayersAdmin() {
             {!s3Configured && (
               <p className="mt-2 text-xs text-amber-700">S3 no configurado.</p>
             )}
+          </div>
+
+          <div className="sm:col-span-2">
+            <p className="mb-2 text-sm font-semibold text-brand-navy">
+              Video corto
+            </p>
+            <p className="mb-3 text-xs text-brand-muted">
+              MP4 H.264, máximo {PLAYER_VIDEO_MAX_LABEL}. Elige si se muestra
+              horizontal (16:9) o vertical (9:16) en el perfil público.
+            </p>
+
+            <div className="mb-4 flex flex-wrap gap-2">
+              {(
+                [
+                  {
+                    value: "horizontal" as PlayerVideoOrientation,
+                    label: "Horizontal (16:9)",
+                  },
+                  {
+                    value: "vertical" as PlayerVideoOrientation,
+                    label: "Vertical (9:16)",
+                  },
+                ] as const
+              ).map((opt) => {
+                const selected =
+                  (form.videoOrientation ??
+                    DEFAULT_PLAYER_VIDEO_ORIENTATION) === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      setForm({ ...form, videoOrientation: opt.value })
+                    }
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                      selected
+                        ? "bg-brand-navy text-white"
+                        : "border border-brand-navy/20 text-brand-navy hover:bg-brand-slate"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {form.videoKey ? (
+              <div
+                className={`mb-4 overflow-hidden rounded-lg border border-brand-navy/10 bg-brand-slate ${
+                  form.videoOrientation === "vertical"
+                    ? "max-w-[240px]"
+                    : "max-w-md"
+                }`}
+              >
+                <video
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className={`w-full bg-black object-contain ${
+                    form.videoOrientation === "vertical"
+                      ? "aspect-[9/16]"
+                      : "aspect-video"
+                  }`}
+                  src={resolvePublicObjectUrl(form.videoKey)}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 text-xs text-brand-muted">
+                  <span>
+                    {form.videoKey}
+                    {form.videoSizeBytes
+                      ? ` · ${formatBytes(form.videoSizeBytes)}`
+                      : ""}
+                    {` · ${
+                      form.videoOrientation === "vertical"
+                        ? "Vertical"
+                        : "Horizontal"
+                    }`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void handleRemoveVideo()}
+                    className="font-semibold text-red-600 hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="mb-3 text-xs text-brand-muted">
+                Sin video cargado todavía.
+              </p>
+            )}
+
+            <label className="inline-flex cursor-pointer items-center rounded-md border border-brand-navy/20 px-4 py-2 text-sm font-semibold text-brand-navy transition hover:bg-brand-slate has-[:disabled]:opacity-50">
+              {uploadingVideo
+                ? "Subiendo video…"
+                : form.videoKey
+                  ? "Reemplazar video (MP4)"
+                  : "Subir video a S3 (MP4)"}
+              <input
+                type="file"
+                accept="video/mp4"
+                className="hidden"
+                disabled={uploadingVideo || !s3Configured}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleVideoUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
           </div>
 
           <label className="flex items-center gap-2 sm:col-span-2">

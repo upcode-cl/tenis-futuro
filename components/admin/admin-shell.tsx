@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const LINKS = [
+  { href: "/admin/contenido", label: "Contenido" },
+  { href: "/admin/apariencia", label: "Apariencia" },
   { href: "/admin/jugadores", label: "Jugadores" },
+  { href: "/admin/noticias", label: "Noticias" },
   { href: "/admin/usuarios", label: "Usuarios" },
 ];
 
@@ -71,7 +74,7 @@ export function AdminShell({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="admin-main mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
     </div>
   );
 }

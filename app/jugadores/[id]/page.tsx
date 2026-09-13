@@ -4,7 +4,12 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { PlayerProfile } from "@/components/player-profile";
+import { resolveSiteLogoUrl } from "@/lib/cms/logo";
+import { getSiteSettings } from "@/lib/db/cms";
 import { getPlayerById, listPlayers } from "@/lib/db/players";
+
+/** Jugadores siempre frescos y en orden aleatorio en cada recarga */
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -27,13 +32,16 @@ export default async function PlayerPage({ params }: PageProps) {
   const player = await getPlayerById(id);
   if (!player || !player.published) notFound();
 
-  const others = (await listPlayers())
-    .filter((p) => p.id !== player.id)
-    .slice(0, 4);
+  const [settings, others] = await Promise.all([
+    getSiteSettings(),
+    listPlayers({ randomize: true }).then((list) =>
+      list.filter((p) => p.id !== player.id),
+    ),
+  ]);
 
   return (
     <>
-      <Header />
+      <Header logoSrc={resolveSiteLogoUrl(settings)} />
       <main className="flex-1 bg-brand-slate">
         <div className="mx-auto max-w-6xl px-4 pt-28 pb-10 sm:px-6 sm:pt-32 lg:px-8 lg:pb-14">
           <Link

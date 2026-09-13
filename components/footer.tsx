@@ -62,7 +62,7 @@ export function Footer() {
               links={[
                 ["Quiénes somos", "#fundacion"],
                 ["Programas", "#programas"],
-                ["Noticias", "#instagram"],
+                ["Noticias", "#noticias"],
               ]}
             />
             <FooterCol

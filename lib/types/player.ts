@@ -25,12 +25,21 @@ export type Player = {
   /** Galería completa (keys S3); la primera es la principal */
   galleryKeys: string[];
   gallerySrcs: string[];
+  /** Video corto (key S3, ej. videos/nombre.mp4) */
+  videoKey?: string;
+  videoSrc?: string;
+  videoDurationSec?: number;
+  videoSizeBytes?: number;
+  videoContentType?: string;
+  /** Cómo mostrar el video en la ficha pública */
+  videoOrientation?: "horizontal" | "vertical";
   /** Ficha completa */
   bio?: string;
   birthDate?: string;
   hand?: PlayerHand;
   heightCm?: number;
   club?: string;
+  school?: string;
   coach?: string;
   playingStyle?: string;
   instagram?: string;
@@ -51,11 +60,17 @@ export type PlayerInput = {
   highlights: string[];
   imageKey?: string;
   galleryKeys?: string[];
+  videoKey?: string | null;
+  videoDurationSec?: number | null;
+  videoSizeBytes?: number | null;
+  videoContentType?: string | null;
+  videoOrientation?: "horizontal" | "vertical" | null;
   bio?: string;
   birthDate?: string;
   hand?: PlayerHand;
   heightCm?: number | null;
   club?: string;
+  school?: string;
   coach?: string;
   playingStyle?: string;
   instagram?: string;
@@ -78,11 +93,17 @@ export type PlayerDocument = {
   /** @deprecated prefer galleryKeys[0] */
   imageKey?: string;
   galleryKeys?: string[];
+  videoKey?: string;
+  videoDurationSec?: number;
+  videoSizeBytes?: number;
+  videoContentType?: string;
+  videoOrientation?: "horizontal" | "vertical";
   bio?: string;
   birthDate?: string;
   hand?: PlayerHand;
   heightCm?: number;
   club?: string;
+  school?: string;
   coach?: string;
   playingStyle?: string;
   instagram?: string;

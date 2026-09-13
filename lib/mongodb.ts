@@ -45,3 +45,5 @@ export async function getDb(): Promise<Db> {
 
 export const PLAYERS_COLLECTION = "players";
 export const USERS_COLLECTION = "users";
+export const SITE_SETTINGS_COLLECTION = "site_settings";
+export const SITE_CONTENT_COLLECTION = "site_content";

@@ -4,10 +4,12 @@ import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-export function AdminLoginForm() {
+export function AdminLoginForm({ logoSrc }: { logoSrc?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/admin/jugadores";
+  const next = searchParams.get("next") || "/admin/contenido";
+  const logo = logoSrc?.trim() || "/LogoTenisFuturo.png";
+  const isRemote = logo.startsWith("http://") || logo.startsWith("https://");
 
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
@@ -42,12 +44,13 @@ export function AdminLoginForm() {
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="mb-4 rounded-xl bg-white p-3 shadow-sm ring-1 ring-brand-navy/5">
           <Image
-            src="/LogoTenisFuturo.png"
+            src={logo}
             alt="Tenis Futuro"
             width={180}
             height={52}
             className="h-10 w-auto"
             priority
+            unoptimized={isRemote}
           />
         </div>
         <h1 className="text-xl font-extrabold uppercase tracking-tight text-brand-navy">

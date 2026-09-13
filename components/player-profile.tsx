@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ImageSlot } from "@/components/image-slot";
 import { PlayerRankingStats } from "@/components/player-ranking-stats";
+import { PlayerVideo } from "@/components/player-video";
 import type { Player } from "@/lib/types/player";
 
 export function PlayerProfile({ player }: { player: Player }) {
@@ -14,10 +15,12 @@ export function PlayerProfile({ player }: { player: Player }) {
         ? [player.imageSrc]
         : [];
   const [active, setActive] = useState(0);
+  const poster = images[0] ?? player.imageSrc;
+  const hasVideo = Boolean(player.videoSrc);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
-      <div>
+      <div className="space-y-4">
         <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-brand-navy/5 shadow-lg">
           <AnimatePresence mode="wait">
             <motion.div
@@ -66,7 +69,7 @@ export function PlayerProfile({ player }: { player: Player }) {
         </div>
 
         {images.length > 1 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {images.map((src, i) => (
               <button
                 key={src}
@@ -84,6 +87,15 @@ export function PlayerProfile({ player }: { player: Player }) {
             ))}
           </div>
         )}
+
+        {hasVideo && player.videoSrc ? (
+          <PlayerVideo
+            src={player.videoSrc}
+            poster={poster}
+            title={player.name}
+            orientation={player.videoOrientation ?? "horizontal"}
+          />
+        ) : null}
       </div>
 
       <div>
@@ -99,6 +111,8 @@ export function PlayerProfile({ player }: { player: Player }) {
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Stat label="Categoría" value={player.category} />
+          {player.club ? <Stat label="Club" value={player.club} /> : null}
+          {player.school ? <Stat label="Colegio" value={player.school} /> : null}
           {player.hand ? <Stat label="Mano" value={player.hand} /> : null}
           {player.heightCm ? (
             <Stat label="Altura" value={`${player.heightCm} cm`} />
@@ -106,7 +120,6 @@ export function PlayerProfile({ player }: { player: Player }) {
           {player.birthDate ? (
             <Stat label="Nacimiento" value={formatDate(player.birthDate)} />
           ) : null}
-          {player.club ? <Stat label="Club" value={player.club} /> : null}
         </div>
 
         {player.bio && (
@@ -114,7 +127,7 @@ export function PlayerProfile({ player }: { player: Player }) {
             <h2 className="text-sm font-bold uppercase tracking-wider text-brand-navy">
               Biografía
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-brand-navy/80 whitespace-pre-line">
+            <p className="mt-2 text-sm leading-relaxed text-brand-navy/80 whitespace-pre-line text-justify text-justify-site">
               {player.bio}
             </p>
           </div>

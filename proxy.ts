@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
     const token = request.cookies.get(ADMIN_COOKIE)?.value;
     const session = await verifyAdminToken(token);
     if (session) {
-      return NextResponse.redirect(new URL("/admin/jugadores", request.url));
+      return NextResponse.redirect(new URL("/admin/contenido", request.url));
     }
     return NextResponse.next();
   }

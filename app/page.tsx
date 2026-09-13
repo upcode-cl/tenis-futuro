@@ -6,20 +6,32 @@ import { InstagramSection } from "@/components/instagram-section";
 import { PlayersSection } from "@/components/players-section";
 import { ProgramsSection } from "@/components/programs-section";
 import { SupportSection } from "@/components/support-section";
+import { SponsorsSection } from "@/components/sponsors-section";
+import { NewsSection } from "@/components/news-section";
+import { getSiteContent, getSiteSettings } from "@/lib/db/cms";
+import { resolveSiteLogoUrl } from "@/lib/cms/logo";
 import { listPlayers } from "@/lib/db/players";
+import { listNews, ensureNewsSeed } from "@/lib/db/news";
 import { getInstagramPosts } from "@/lib/instagram";
 
-/** Jugadores siempre desde MongoDB en cada visita */
+/** Contenido y jugadores siempre frescos */
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { posts, error: instagramError } = await getInstagramPosts(6);
+  await ensureNewsSeed();
+
+  const [settings, content, instagram, news] = await Promise.all([
+    getSiteSettings(),
+    getSiteContent(),
+    getInstagramPosts(6),
+    listNews({ publishedOnly: true }),
+  ]);
 
   let players: Awaited<ReturnType<typeof listPlayers>> = [];
   let playersError: string | null = null;
 
   try {
-    players = await listPlayers();
+    players = await listPlayers({ randomize: true });
   } catch (err) {
     console.error("[Home] players", err);
     playersError =
@@ -28,14 +40,16 @@ export default async function Home() {
 
   return (
     <>
-      <Header />
+      <Header logoSrc={resolveSiteLogoUrl(settings)} />
       <main className="flex-1">
-        <Hero />
-        <AboutSection />
+        <Hero content={content.hero} />
+        <AboutSection content={content.about} />
         <PlayersSection players={players} error={playersError} />
-        <ProgramsSection />
-        <InstagramSection posts={posts} error={instagramError} />
-        <SupportSection />
+        <NewsSection news={news} />
+        <ProgramsSection content={content.programs} />
+        <InstagramSection posts={instagram.posts} error={instagram.error} />
+        <SupportSection content={content.support} />
+        <SponsorsSection content={content.sponsors} />
       </main>
       <Footer />
     </>

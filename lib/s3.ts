@@ -9,6 +9,8 @@ import { resolvePublicObjectUrl } from "@/lib/s3-public";
 
 export { resolvePublicObjectUrl } from "@/lib/s3-public";
 export const S3_PLAYERS_PREFIX = "players/";
+export const S3_SITE_PREFIX = "site/";
+export const S3_VIDEOS_PREFIX = "videos/";
 
 export type S3Config = {
   bucket: string;
@@ -78,7 +80,37 @@ export function buildPlayerImageKey(
   return `${S3_PLAYERS_PREFIX}${safe || "jugador"}${suffix}.${extension}`;
 }
 
-export async function createPlayerImageUploadUrl(
+export function buildSiteImageKey(
+  name = "hero",
+  extension = "jpg",
+  unique = false,
+): string {
+  const safe = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const suffix = unique ? `-${Date.now()}` : "";
+  return `${S3_SITE_PREFIX}${safe || "hero"}${suffix}.${extension}`;
+}
+
+export function buildPlayerVideoKey(
+  playerSlug: string,
+  extension = "mp4",
+  unique = true,
+): string {
+  const safe = playerSlug
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const suffix = unique ? `-${Date.now()}` : "";
+  return `${S3_VIDEOS_PREFIX}${safe || "jugador"}${suffix}.${extension}`;
+}
+
+export async function createSignedUploadUrl(
   key: string,
   contentType: string,
 ): Promise<{ uploadUrl: string; imageKey: string; publicUrl: string }> {
@@ -104,6 +136,14 @@ export async function createPlayerImageUploadUrl(
     imageKey: key,
     publicUrl: resolvePublicObjectUrl(key) ?? key,
   };
+}
+
+/** @deprecated usa createSignedUploadUrl */
+export async function createPlayerImageUploadUrl(
+  key: string,
+  contentType: string,
+) {
+  return createSignedUploadUrl(key, contentType);
 }
 
 export async function deleteS3Object(key: string): Promise<void> {

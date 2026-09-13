@@ -38,3 +38,11 @@ body {
   background: color-mix(in srgb, var(--brand-lime) 55%, white);
   color: var(--brand-navy);
 }
+
+/* Texto justificado en el frontend del sitio */
+main:not(.admin-main) p,
+.text-justify-site {
+  text-align: justify;
+  text-justify: inter-word;
+}
+

@@ -8,6 +8,10 @@ import type {
   PlayerHand,
   PlayerInput,
 } from "@/lib/types/player";
+import {
+  DEFAULT_PLAYER_VIDEO_ORIENTATION,
+  isPlayerVideoOrientation,
+} from "@/lib/constants/player-video";
 
 function normalizeGalleryKeys(doc: WithId<PlayerDocument>): string[] {
   const fromGallery = (doc.galleryKeys ?? []).map((k) => k.trim()).filter(Boolean);
@@ -38,11 +42,20 @@ function mapPlayer(doc: WithId<PlayerDocument>): Player {
     gallerySrcs: galleryKeys
       .map((k) => resolvePublicObjectUrl(k))
       .filter((u): u is string => Boolean(u)),
+    videoKey: doc.videoKey,
+    videoSrc: resolvePublicObjectUrl(doc.videoKey),
+    videoDurationSec: doc.videoDurationSec,
+    videoSizeBytes: doc.videoSizeBytes,
+    videoContentType: doc.videoContentType,
+    videoOrientation: isPlayerVideoOrientation(doc.videoOrientation)
+      ? doc.videoOrientation
+      : DEFAULT_PLAYER_VIDEO_ORIENTATION,
     bio: doc.bio ?? "",
     birthDate: doc.birthDate ?? "",
     hand: (doc.hand as PlayerHand) ?? "",
     heightCm: doc.heightCm,
     club: doc.club ?? "",
+    school: doc.school ?? "",
     coach: doc.coach ?? "",
     playingStyle: doc.playingStyle ?? "",
     instagram: doc.instagram ?? "",
@@ -105,6 +118,21 @@ function buildDocFromInput(
     highlights: sanitizeHighlights(input.highlights),
     imageKey: galleryKeys[0],
     galleryKeys,
+    videoKey: input.videoKey?.trim() || undefined,
+    videoDurationSec:
+      input.videoDurationSec === null || input.videoDurationSec === undefined
+        ? undefined
+        : Number(input.videoDurationSec) || undefined,
+    videoSizeBytes:
+      input.videoSizeBytes === null || input.videoSizeBytes === undefined
+        ? undefined
+        : Number(input.videoSizeBytes) || undefined,
+    videoContentType: input.videoContentType?.trim() || undefined,
+    videoOrientation: isPlayerVideoOrientation(input.videoOrientation)
+      ? input.videoOrientation
+      : input.videoKey
+        ? DEFAULT_PLAYER_VIDEO_ORIENTATION
+        : undefined,
     bio: input.bio?.trim() || undefined,
     birthDate: input.birthDate?.trim() || undefined,
     hand: input.hand || undefined,
@@ -113,6 +141,7 @@ function buildDocFromInput(
         ? undefined
         : Number(input.heightCm) || undefined,
     club: input.club?.trim() || undefined,
+    school: input.school?.trim() || undefined,
     coach: input.coach?.trim() || undefined,
     playingStyle: input.playingStyle?.trim() || undefined,
     instagram: input.instagram?.trim().replace(/^@/, "") || undefined,
@@ -123,8 +152,20 @@ function buildDocFromInput(
   };
 }
 
+export function shufflePlayers<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = result[i];
+    result[i] = result[j];
+    result[j] = temp;
+  }
+  return result;
+}
+
 export async function listPlayers(options?: {
   publishedOnly?: boolean;
+  randomize?: boolean;
 }): Promise<Player[]> {
   const db = await getDb();
   const filter =
@@ -136,7 +177,8 @@ export async function listPlayers(options?: {
     .sort({ sortOrder: 1, ranking: 1, name: 1 })
     .toArray();
 
-  return docs.map(mapPlayer);
+  const mapped = docs.map(mapPlayer);
+  return options?.randomize ? shufflePlayers(mapped) : mapped;
 }
 
 export async function getPlayerById(id: string): Promise<Player | null> {
@@ -171,6 +213,8 @@ export async function updatePlayer(
 ): Promise<Player | null> {
   if (!ObjectId.isValid(id)) return null;
   const db = await getDb();
+  const existing = await getPlayerById(id);
+  if (!existing) return null;
 
   const update: Partial<PlayerDocument> = {
     updatedAt: new Date(),
@@ -223,6 +267,29 @@ export async function updatePlayer(
     update.galleryKeys = galleryKeys;
     update.imageKey = galleryKeys[0];
   }
+  if (input.videoKey !== undefined) {
+    update.videoKey = input.videoKey?.trim() || undefined;
+  }
+  if (input.videoDurationSec !== undefined) {
+    update.videoDurationSec =
+      input.videoDurationSec === null
+        ? undefined
+        : Number(input.videoDurationSec) || undefined;
+  }
+  if (input.videoSizeBytes !== undefined) {
+    update.videoSizeBytes =
+      input.videoSizeBytes === null
+        ? undefined
+        : Number(input.videoSizeBytes) || undefined;
+  }
+  if (input.videoContentType !== undefined) {
+    update.videoContentType = input.videoContentType?.trim() || undefined;
+  }
+  if (input.videoOrientation !== undefined) {
+    update.videoOrientation = isPlayerVideoOrientation(input.videoOrientation)
+      ? input.videoOrientation
+      : DEFAULT_PLAYER_VIDEO_ORIENTATION;
+  }
   if (input.bio !== undefined) update.bio = input.bio.trim() || undefined;
   if (input.birthDate !== undefined) {
     update.birthDate = input.birthDate.trim() || undefined;
@@ -233,6 +300,9 @@ export async function updatePlayer(
       input.heightCm === null ? undefined : Number(input.heightCm) || undefined;
   }
   if (input.club !== undefined) update.club = input.club.trim() || undefined;
+  if (input.school !== undefined) {
+    update.school = input.school.trim() || undefined;
+  }
   if (input.coach !== undefined) update.coach = input.coach.trim() || undefined;
   if (input.playingStyle !== undefined) {
     update.playingStyle = input.playingStyle.trim() || undefined;
@@ -241,6 +311,19 @@ export async function updatePlayer(
     update.instagram = input.instagram.trim().replace(/^@/, "") || undefined;
   }
   if (input.published !== undefined) update.published = input.published;
+
+  // Si cambia el video, borrar el anterior de S3
+  if (
+    input.videoKey !== undefined &&
+    existing.videoKey &&
+    input.videoKey?.trim() !== existing.videoKey
+  ) {
+    try {
+      await deleteS3Object(existing.videoKey);
+    } catch (err) {
+      console.error("[updatePlayer] old video S3", err);
+    }
+  }
 
   const result = await db
     .collection<PlayerDocument>(PLAYERS_COLLECTION)
@@ -276,6 +359,41 @@ export async function removePlayerGalleryImage(
   });
 }
 
+export async function removePlayerVideo(
+  id: string,
+  deleteFromS3 = true,
+): Promise<Player | null> {
+  const player = await getPlayerById(id);
+  if (!player) return null;
+
+  if (deleteFromS3 && player.videoKey) {
+    try {
+      await deleteS3Object(player.videoKey);
+    } catch (err) {
+      console.error("[removePlayerVideo] S3", err);
+    }
+  }
+
+  if (!ObjectId.isValid(id)) return null;
+  const db = await getDb();
+  const result = await db.collection<PlayerDocument>(PLAYERS_COLLECTION).findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    {
+      $set: { updatedAt: new Date() },
+      $unset: {
+        videoKey: "",
+        videoDurationSec: "",
+        videoSizeBytes: "",
+        videoContentType: "",
+        videoOrientation: "",
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  return result ? mapPlayer(result) : null;
+}
+
 export async function deletePlayer(id: string): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false;
   const player = await getPlayerById(id);
@@ -285,8 +403,10 @@ export async function deletePlayer(id: string): Promise<boolean> {
     .deleteOne({ _id: new ObjectId(id) });
 
   if (result.deletedCount === 1 && player) {
+    const keys = [...player.galleryKeys];
+    if (player.videoKey) keys.push(player.videoKey);
     await Promise.all(
-      player.galleryKeys.map(async (key) => {
+      keys.map(async (key) => {
         try {
           await deleteS3Object(key);
         } catch (err) {

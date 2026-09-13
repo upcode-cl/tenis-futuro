@@ -9,15 +9,18 @@ const NAV = [
   { href: "#inicio", label: "Inicio" },
   { href: "#fundacion", label: "Quiénes somos" },
   { href: "#jugadores", label: "Jugadores" },
+  { href: "#noticias", label: "Noticias" },
   { href: "#programas", label: "Programas" },
   { href: "#instagram", label: "Instagram" },
   { href: "#apoyanos", label: "Apóyanos" },
   { href: "#contacto", label: "Contacto" },
 ];
 
-export function Header() {
+export function Header({ logoSrc }: { logoSrc?: string }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const logo = logoSrc?.trim() || "/LogoTenisFuturo.png";
+  const isRemote = logo.startsWith("http://") || logo.startsWith("https://");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -37,7 +40,7 @@ export function Header() {
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 xl:px-12">
         <Link
           href="#inicio"
           className="group relative z-10 shrink-0"
@@ -55,11 +58,12 @@ export function Header() {
               className="pointer-events-none absolute inset-[-6px] -z-10 rounded-2xl bg-white/20 blur-xl transition duration-300 group-hover:bg-white/30"
             />
             <Image
-              src="/LogoTenisFuturo.png"
+              src={logo}
               alt="Tenis Futuro Fundación"
               width={380}
               height={380}
               priority
+              unoptimized={isRemote}
               className="relative h-30 w-auto object-contain sm:h-30 md:h-30 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
             />
           </motion.span>
