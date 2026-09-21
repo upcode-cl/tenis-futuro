@@ -40,6 +40,13 @@ async function main() {
       ...current.hero,
       imageKey: KEY,
       imageSrc: publicUrl,
+      images: [
+        {
+          imageKey: KEY,
+          imageSrc: publicUrl,
+          imageAlt: current.hero.imageAlt,
+        },
+      ],
     },
   });
 

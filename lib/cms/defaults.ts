@@ -32,6 +32,15 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       label: "Conoce la fundación",
       href: "#fundacion",
     },
+    images: [
+      {
+        imageKey: "site/hero.png",
+        imageSrc:
+          "https://tenis-futuro-bucket.s3.us-east-1.amazonaws.com/site/hero.png",
+        imageAlt:
+          "Jugador de Tenis Futuro celebrando en cancha de polvo de ladrillo",
+      },
+    ],
     imageKey: "site/hero.png",
     imageSrc:
       "https://tenis-futuro-bucket.s3.us-east-1.amazonaws.com/site/hero.png",

@@ -34,7 +34,7 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
     <section
       id="sponsors"
       aria-label="Auspiciadores y Alianzas"
-      className="relative overflow-hidden border-t border-brand-navy/10 bg-brand-slate py-16 sm:py-20"
+      className="relative overflow-hidden border-t border-brand-navy/10 bg-white py-16 sm:py-20"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Encabezado con animación Motion */}
@@ -61,7 +61,7 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
           )}
         </motion.div>
 
-        {/* CASO 1: 3 o menos de 3 sponsors -> Centrados y en tono gris */}
+        {/* CASO 1: 3 o menos de 3 sponsors -> Centrados */}
         {isFew ? (
           <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
             {items.map((sponsor, index) => (
@@ -77,7 +77,7 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
                 }}
                 whileHover={{ scale: 1.05, y: -2 }}
               >
-                <SponsorCard item={sponsor} isFew />
+                <SponsorCard item={sponsor} />
               </motion.div>
             ))}
           </div>
@@ -105,8 +105,8 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
             </div>
 
             {/* Máscaras de degradado a los extremos para suavizar entrada/salida */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 sm:w-24 bg-gradient-to-r from-brand-slate to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 sm:w-24 bg-gradient-to-l from-brand-slate to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white to-transparent sm:w-24" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white to-transparent sm:w-24" />
 
             <div
               ref={trackRef}
@@ -129,7 +129,7 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
                     whileHover={{ scale: 1.05, y: -2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <SponsorCard item={sponsor} isFew={false} />
+                    <SponsorCard item={sponsor} />
                   </motion.div>
                 ))}
               </motion.div>
@@ -141,13 +141,8 @@ export function SponsorsSection({ content }: { content?: SponsorsContent | null 
   );
 }
 
-/**
- * Card con tamaño estandarizado automático y filtro gris homogéneo.
- * - Dimensiones estándar: h-16 w-44 (sm: h-20 w-56).
- * - Tamaño de imagen acotado: max-h-11 max-w-[160px] con object-contain.
- * - Filtro gris uniforme para que no choquen logos con diferentes colores.
- */
-function SponsorCard({ item, isFew }: { item: SponsorItem; isFew: boolean }) {
+/** Card con tamaño estándar para todos los logos cargados desde el admin. */
+function SponsorCard({ item }: { item: SponsorItem }) {
   const isLink = Boolean(item.url?.trim() && item.url !== "#");
   const Wrapper = isLink ? "a" : "div";
   const wrapperProps = isLink
@@ -166,23 +161,20 @@ function SponsorCard({ item, isFew }: { item: SponsorItem; isFew: boolean }) {
   return (
     <Wrapper
       {...wrapperProps}
-      className={`group relative flex h-16 w-44 sm:h-20 sm:w-56 shrink-0 items-center justify-center rounded-xl border border-brand-navy/10 bg-white px-5 py-3 shadow-xs transition-all duration-300 hover:border-brand-navy/25 hover:shadow-md ${
+      className={`group relative flex h-16 w-44 shrink-0 items-center justify-center rounded-xl border border-brand-navy/10 bg-brand-slate/40 px-5 py-3 shadow-xs transition-all duration-300 hover:border-brand-navy/25 hover:shadow-md sm:h-20 sm:w-56 ${
         isLink ? "cursor-pointer" : ""
       }`}
     >
       {resolvedSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={resolvedSrc}
           alt={item.name || "Sponsor"}
           loading="lazy"
-          className={`max-h-10 sm:max-h-11 max-w-[130px] sm:max-w-[160px] w-auto h-auto object-contain select-none pointer-events-none transition-all duration-300 ${
-            isFew
-              ? "filter grayscale contrast-75 brightness-95 opacity-65 group-hover:opacity-100 group-hover:grayscale-0"
-              : "filter grayscale contrast-75 brightness-95 opacity-70 group-hover:opacity-100 group-hover:grayscale-0"
-          }`}
+          className="pointer-events-none h-10 w-[130px] select-none object-contain transition duration-300 group-hover:scale-[1.03] sm:h-11 sm:w-[160px]"
         />
       ) : (
-        <span className="text-center text-xs font-bold uppercase tracking-wider text-brand-muted line-clamp-2">
+        <span className="line-clamp-2 text-center text-xs font-bold uppercase tracking-wider text-brand-muted">
           {item.name || "Sponsor"}
         </span>
       )}

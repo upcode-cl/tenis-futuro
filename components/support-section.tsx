@@ -5,7 +5,7 @@ import type { SupportContent } from "@/lib/cms/types";
 
 export function SupportSection({ content }: { content: SupportContent }) {
   return (
-    <section id="apoyanos" className="bg-white py-20 sm:py-24">
+    <section id="apoyanos" className="bg-brand-slate py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-muted">

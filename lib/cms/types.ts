@@ -49,6 +49,14 @@ export type SupportAction = {
   href: string;
 };
 
+export type HeroSlide = {
+  /** Key S3 (ej. site/hero-123.png) — preferido */
+  imageKey?: string;
+  /** URL pública o ruta /public */
+  imageSrc: string;
+  imageAlt?: string;
+};
+
 export type HeroContent = {
   eyebrow: string;
   title: string;
@@ -56,9 +64,11 @@ export type HeroContent = {
   subtitle: string;
   primaryCta: CtaLink;
   secondaryCta: CtaLink;
-  /** Key S3 (ej. site/hero.png) — preferido */
+  /** Fotos del slider. En el sitio se muestran en orden aleatorio. */
+  images: HeroSlide[];
+  /** Key S3 de la primera foto (compatibilidad) */
   imageKey?: string;
-  /** URL pública o ruta /public (fallback) */
+  /** URL de la primera foto (compatibilidad) */
   imageSrc: string;
   imageAlt: string;
 };

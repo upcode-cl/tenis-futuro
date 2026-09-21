@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DEFAULT_SITE_CONTENT } from "@/lib/cms/defaults";
+import { applyHeroSlides, heroSlidePreview } from "@/lib/cms/hero-slides";
 import type { SiteContent } from "@/lib/cms/types";
 import { resolvePublicObjectUrl } from "@/lib/s3-public";
 
@@ -76,8 +77,8 @@ export function ContentAdmin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: "hero",
-          contentType: file.type || "image/png",
-          imageKey: "site/hero.png",
+          contentType: file.type || "image/jpeg",
+          unique: true,
         }),
       });
       const data = await res.json();
@@ -101,14 +102,17 @@ export function ContentAdmin() {
 
       setForm((prev) => ({
         ...prev,
-        hero: {
-          ...prev.hero,
-          imageKey: data.imageKey,
-          imageSrc: publicUrl,
-        },
+        hero: applyHeroSlides(prev.hero, [
+          ...(prev.hero.images ?? []),
+          {
+            imageKey: data.imageKey,
+            imageSrc: publicUrl,
+            imageAlt: prev.hero.imageAlt,
+          },
+        ]),
       }));
       setMessage(
-        "Imagen subida a S3. Pulsa «Guardar contenido» para publicar en el sitio.",
+        "Imagen agregada al slider. Pulsa «Guardar contenido» para publicarla.",
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al subir imagen");
@@ -230,10 +234,18 @@ export function ContentAdmin() {
     return <p className="text-sm text-brand-muted">Cargando contenido…</p>;
   }
 
-  const heroPreview =
-    resolvePublicObjectUrl(form.hero.imageKey) ||
-    form.hero.imageSrc ||
-    "/heroPhoto.png";
+  const heroSlides =
+    form.hero.images?.length > 0
+      ? form.hero.images
+      : form.hero.imageSrc || form.hero.imageKey
+        ? [
+            {
+              imageKey: form.hero.imageKey,
+              imageSrc: form.hero.imageSrc,
+              imageAlt: form.hero.imageAlt,
+            },
+          ]
+        : [];
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
@@ -301,11 +313,11 @@ export function ContentAdmin() {
 
             <div className="sm:col-span-2 rounded-lg border border-brand-navy/10 bg-brand-slate/40 p-4">
               <p className="text-sm font-semibold text-brand-navy">
-                Imagen Hero (S3)
+                Imágenes del slider
               </p>
               <p className="mt-1 text-xs text-brand-muted">
-                Se sube al bucket en <code>site/hero.png</code> y el sitio la
-                consume desde la URL pública.
+                En cada visita el inicio las mezcla al azar y las cruza con un
+                fundido. Sube al menos dos fotos para que el slider avance.
               </p>
               {!s3Configured && (
                 <p className="mt-2 text-xs text-amber-700">
@@ -313,51 +325,58 @@ export function ContentAdmin() {
                   S3_BUCKET_NAME.
                 </p>
               )}
-              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="relative aspect-[16/10] w-full max-w-sm overflow-hidden rounded-md bg-brand-navy/10">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroPreview}
-                    alt="Vista previa hero"
-                    className="h-full w-full object-cover"
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {heroSlides.map((slide, slideIndex) => (
+                  <div
+                    key={`${slide.imageKey ?? slide.imageSrc}-${slideIndex}`}
+                    className="overflow-hidden rounded-md border border-brand-navy/10 bg-white"
+                  >
+                    <div className="relative aspect-[16/10] bg-brand-navy/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={heroSlidePreview(slide)}
+                        alt={slide.imageAlt || form.hero.imageAlt}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                      <p className="truncate text-xs text-brand-muted">
+                        {slide.imageKey || "Sin key"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            hero: applyHeroSlides(
+                              prev.hero,
+                              (prev.hero.images ?? heroSlides).filter(
+                                (_, i) => i !== slideIndex,
+                              ),
+                            ),
+                          }))
+                        }
+                        className="text-xs font-semibold text-red-700 hover:underline"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <label className="flex aspect-[16/10] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-brand-navy/25 bg-white text-center text-sm font-semibold text-brand-navy transition hover:border-brand-lime has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                  {uploading ? "Subiendo…" : "Agregar imagen"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    disabled={uploading || !s3Configured}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleHeroUpload(file);
+                      e.target.value = "";
+                    }}
                   />
-                </div>
-                <div className="min-w-0 flex-1 space-y-3">
-                  <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-brand-lime px-4 py-2.5 text-sm font-bold uppercase text-brand-navy transition hover:bg-brand-lime-dark has-[:disabled]:opacity-60">
-                    {uploading ? "Subiendo…" : "Subir a S3"}
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="hidden"
-                      disabled={uploading || !s3Configured}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void handleHeroUpload(file);
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
-                  <Field
-                    label="Key S3"
-                    value={form.hero.imageKey ?? ""}
-                    onChange={(v) =>
-                      setForm({
-                        ...form,
-                        hero: { ...form.hero, imageKey: v },
-                      })
-                    }
-                  />
-                  <Field
-                    label="URL pública"
-                    value={form.hero.imageSrc}
-                    onChange={(v) =>
-                      setForm({
-                        ...form,
-                        hero: { ...form.hero, imageSrc: v },
-                      })
-                    }
-                  />
-                </div>
+                </label>
               </div>
             </div>
 

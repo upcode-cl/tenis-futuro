@@ -1,6 +1,8 @@
 import { DEFAULT_SITE_CONTENT, DEFAULT_SITE_SETTINGS } from "@/lib/cms/defaults";
 import { normalizeHexColor } from "@/lib/cms/colors";
+import { normalizeHeroSlides } from "@/lib/cms/hero-slides";
 import type {
+  HeroContent,
   SiteContent,
   SiteSettings,
 } from "@/lib/cms/types";
@@ -27,9 +29,45 @@ function mergeSettings(doc?: Partial<SiteSettings> | null): SiteSettings {
   };
 }
 
+function mergeHero(hero?: Partial<HeroContent> | null): HeroContent {
+  const merged: HeroContent = {
+    ...DEFAULT_SITE_CONTENT.hero,
+    ...(hero ?? {}),
+    primaryCta: {
+      ...DEFAULT_SITE_CONTENT.hero.primaryCta,
+      ...(hero?.primaryCta ?? {}),
+    },
+    secondaryCta: {
+      ...DEFAULT_SITE_CONTENT.hero.secondaryCta,
+      ...(hero?.secondaryCta ?? {}),
+    },
+  };
+
+  const slides = normalizeHeroSlides(hero);
+  const resolved =
+    slides.length > 0
+      ? slides
+      : normalizeHeroSlides({
+          imageKey: merged.imageKey,
+          imageSrc: merged.imageSrc,
+          imageAlt: merged.imageAlt,
+        });
+  const images =
+    resolved.length > 0 ? resolved : DEFAULT_SITE_CONTENT.hero.images;
+  const first = images[0];
+
+  return {
+    ...merged,
+    images,
+    imageKey: first?.imageKey,
+    imageSrc: first?.imageSrc || DEFAULT_SITE_CONTENT.hero.imageSrc,
+    imageAlt: merged.imageAlt || DEFAULT_SITE_CONTENT.hero.imageAlt,
+  };
+}
+
 function mergeContent(doc?: Partial<SiteContent> | null): SiteContent {
   return {
-    hero: { ...DEFAULT_SITE_CONTENT.hero, ...(doc?.hero ?? {}) },
+    hero: mergeHero(doc?.hero),
     about: {
       ...DEFAULT_SITE_CONTENT.about,
       ...(doc?.about ?? {}),
