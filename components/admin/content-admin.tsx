@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { DEFAULT_SITE_CONTENT } from "@/lib/cms/defaults";
+import {
+  assertHeroBannerImageFile,
+  HERO_IMAGE_MIN_RATIO,
+  HERO_IMAGE_MIN_WIDTH,
+  HERO_IMAGE_SPECS_LABEL,
+  isHeroBannerImage,
+  loadImageDimensions,
+} from "@/lib/cms/hero-image";
 import { applyHeroSlides, heroSlidePreview } from "@/lib/cms/hero-slides";
 import type { SiteContent } from "@/lib/cms/types";
 import { resolvePublicObjectUrl } from "@/lib/s3-public";
@@ -25,6 +33,7 @@ export function ContentAdmin() {
   const [s3Configured, setS3Configured] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [portraitSlideKeys, setPortraitSlideKeys] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/cms/content")
@@ -40,6 +49,47 @@ export function ContentAdmin() {
       .then((d) => setS3Configured(Boolean(d.configured)))
       .catch(() => setS3Configured(false));
   }, []);
+
+  const heroSlides =
+    form.hero.images?.length > 0
+      ? form.hero.images
+      : form.hero.imageSrc || form.hero.imageKey
+        ? [
+            {
+              imageKey: form.hero.imageKey,
+              imageSrc: form.hero.imageSrc,
+              imageAlt: form.hero.imageAlt,
+            },
+          ]
+        : [];
+
+  useEffect(() => {
+    let cancelled = false;
+    const slides = heroSlides;
+
+    void (async () => {
+      const rejected: string[] = [];
+      await Promise.all(
+        slides.map(async (slide, index) => {
+          const src = heroSlidePreview(slide);
+          const key = `${slide.imageKey ?? slide.imageSrc}-${index}`;
+          try {
+            const { width, height } = await loadImageDimensions(src);
+            if (!isHeroBannerImage(width, height)) rejected.push(key);
+          } catch {
+            rejected.push(key);
+          }
+        }),
+      );
+      if (!cancelled) setPortraitSlideKeys(rejected);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Re-scan when the slide list identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heroSlides.map((s) => `${s.imageKey ?? ""}|${s.imageSrc}`).join("\n")]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -72,6 +122,8 @@ export function ContentAdmin() {
     setError(null);
     setMessage(null);
     try {
+      await assertHeroBannerImageFile(file);
+
       const res = await fetch("/api/uploads/site-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,13 +164,28 @@ export function ContentAdmin() {
         ]),
       }));
       setMessage(
-        "Imagen agregada al slider. Pulsa «Guardar contenido» para publicarla.",
+        "Imagen panorámica agregada. Pulsa «Guardar contenido» para publicarla.",
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al subir imagen");
     } finally {
       setUploading(false);
     }
+  }
+
+  function removePortraitHeroSlides() {
+    const next = heroSlides.filter((slide, index) => {
+      const key = `${slide.imageKey ?? slide.imageSrc}-${index}`;
+      return !portraitSlideKeys.includes(key);
+    });
+    setForm((prev) => ({
+      ...prev,
+      hero: applyHeroSlides(prev.hero, next),
+    }));
+    setPortraitSlideKeys([]);
+    setMessage(
+      "Se quitaron las fotos que no cumplen el formato panorámico. Pulsa «Guardar contenido» para confirmar.",
+    );
   }
 
   async function handleSponsorLogoUpload(index: number, file: File) {
@@ -234,19 +301,6 @@ export function ContentAdmin() {
     return <p className="text-sm text-brand-muted">Cargando contenido…</p>;
   }
 
-  const heroSlides =
-    form.hero.images?.length > 0
-      ? form.hero.images
-      : form.hero.imageSrc || form.hero.imageKey
-        ? [
-            {
-              imageKey: form.hero.imageKey,
-              imageSrc: form.hero.imageSrc,
-              imageAlt: form.hero.imageAlt,
-            },
-          ]
-        : [];
-
   return (
     <form onSubmit={handleSave} className="space-y-6">
       {(message || error) && (
@@ -316,55 +370,100 @@ export function ContentAdmin() {
                 Imágenes del slider
               </p>
               <p className="mt-1 text-xs text-brand-muted">
-                En cada visita el inicio las mezcla al azar y las cruza con un
-                fundido. Sube al menos dos fotos para que el slider avance.
+                Solo se aceptan fotos panorámicas horizontales, como la de
+                ejemplo del hero: sujeto a la derecha y espacio libre a la
+                izquierda para el texto.
               </p>
+              <div className="mt-3 rounded-md border border-brand-navy/15 bg-white px-3 py-2.5 text-xs text-brand-navy">
+                <p className="font-semibold">Medidas obligatorias</p>
+                <ul className="mt-1.5 list-disc space-y-1 pl-4 text-brand-muted">
+                  <li>
+                    Recomendado:{" "}
+                    <span className="font-semibold text-brand-navy">
+                      {HERO_IMAGE_SPECS_LABEL}
+                    </span>{" "}
+                    (proporción ~2.3:1)
+                  </li>
+                  <li>
+                    Mínimo: {HERO_IMAGE_MIN_WIDTH}px de ancho y al menos{" "}
+                    {HERO_IMAGE_MIN_RATIO}:1 (el doble de ancha que de alta)
+                  </li>
+                  <li>Formato: JPG, PNG o WebP</li>
+                  <li>
+                    Si la foto es vertical, cuadrada o poco ancha, se rechaza al
+                    subir
+                  </li>
+                </ul>
+              </div>
               {!s3Configured && (
                 <p className="mt-2 text-xs text-amber-700">
                   S3 no configurado. Revisa las variables NEXT_AWS_* y
                   S3_BUCKET_NAME.
                 </p>
               )}
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {heroSlides.map((slide, slideIndex) => (
-                  <div
-                    key={`${slide.imageKey ?? slide.imageSrc}-${slideIndex}`}
-                    className="overflow-hidden rounded-md border border-brand-navy/10 bg-white"
+              {portraitSlideKeys.length > 0 && (
+                <div className="mt-3 flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+                  <p>
+                    Hay {portraitSlideKeys.length} foto
+                    {portraitSlideKeys.length === 1 ? "" : "s"} que no cumplen
+                    el formato panorámico y están ocultas.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={removePortraitHeroSlides}
+                    className="shrink-0 font-semibold underline"
                   >
-                    <div className="relative aspect-[16/10] bg-brand-navy/10">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={heroSlidePreview(slide)}
-                        alt={slide.imageAlt || form.hero.imageAlt}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between gap-2 px-3 py-2">
-                      <p className="truncate text-xs text-brand-muted">
-                        {slide.imageKey || "Sin key"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            hero: applyHeroSlides(
-                              prev.hero,
-                              (prev.hero.images ?? heroSlides).filter(
-                                (_, i) => i !== slideIndex,
+                    Quitar del contenido
+                  </button>
+                </div>
+              )}
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {heroSlides.map((slide, slideIndex) => {
+                  const key = `${slide.imageKey ?? slide.imageSrc}-${slideIndex}`;
+                  if (portraitSlideKeys.includes(key)) return null;
+                  return (
+                    <div
+                      key={key}
+                      className="overflow-hidden rounded-md border border-brand-navy/10 bg-white"
+                    >
+                      <div className="relative aspect-[21/9] bg-brand-navy/90">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={heroSlidePreview(slide)}
+                          alt={slide.imageAlt || form.hero.imageAlt}
+                          className="h-full w-full object-cover object-[70%_center]"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                        <p className="truncate text-[10px] text-brand-muted">
+                          {slide.imageKey || "Sin key"}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              hero: applyHeroSlides(
+                                prev.hero,
+                                (prev.hero.images ?? heroSlides).filter(
+                                  (_, i) => i !== slideIndex,
+                                ),
                               ),
-                            ),
-                          }))
-                        }
-                        className="text-xs font-semibold text-red-700 hover:underline"
-                      >
-                        Quitar
-                      </button>
+                            }))
+                          }
+                          className="shrink-0 text-[10px] font-semibold text-red-700 hover:underline"
+                        >
+                          Quitar
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                <label className="flex aspect-[16/10] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-brand-navy/25 bg-white text-center text-sm font-semibold text-brand-navy transition hover:border-brand-lime has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
-                  {uploading ? "Subiendo…" : "Agregar imagen"}
+                  );
+                })}
+                <label className="flex aspect-[21/9] cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-brand-navy/25 bg-white px-2 text-center text-xs font-semibold text-brand-navy transition hover:border-brand-lime has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                  {uploading ? "Subiendo…" : "Agregar panorámica"}
+                  <span className="text-[10px] font-medium text-brand-muted">
+                    {HERO_IMAGE_SPECS_LABEL}
+                  </span>
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"

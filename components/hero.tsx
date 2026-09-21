@@ -7,6 +7,7 @@ import {
   resolveHeroSlides,
   type ResolvedHeroSlide,
 } from "@/lib/cms/hero-slides";
+import { isHeroBannerImage, loadImageDimensions } from "@/lib/cms/hero-image";
 import type { HeroContent } from "@/lib/cms/types";
 
 const SLIDE_MS = 6800;
@@ -20,6 +21,22 @@ function shuffleSlides(slides: ResolvedHeroSlide[]): ResolvedHeroSlide[] {
     next[j] = current;
   }
   return next;
+}
+
+async function filterHeroBannerSlides(
+  slides: ResolvedHeroSlide[],
+): Promise<ResolvedHeroSlide[]> {
+  const checks = await Promise.all(
+    slides.map(async (slide) => {
+      try {
+        const { width, height } = await loadImageDimensions(slide.src);
+        return isHeroBannerImage(width, height) ? slide : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return checks.filter((slide): slide is ResolvedHeroSlide => slide !== null);
 }
 
 export function Hero({ content }: { content: HeroContent }) {
@@ -37,13 +54,30 @@ export function Hero({ content }: { content: HeroContent }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const current = sourceRef.current;
-    const timer = window.setTimeout(() => {
-      setSlides(current.length > 1 ? shuffleSlides(current) : current);
+
+    void (async () => {
+      const valid = await filterHeroBannerSlides(current);
+      if (cancelled) return;
+      const usable =
+        valid.length > 0
+          ? valid
+          : [
+              {
+                src: "/heroPhoto.png",
+                alt: content.imageAlt,
+                remote: false,
+              },
+            ];
+      setSlides(usable.length > 1 ? shuffleSlides(usable) : usable);
       setIndex(0);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [sourceKey]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceKey, content.imageAlt]);
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -72,10 +106,10 @@ export function Hero({ content }: { content: HeroContent }) {
               className="absolute inset-0"
               initial={
                 !booted
-                  ? { opacity: 1, scale: 1.08, x: 0 }
+                  ? { opacity: 1, scale: 1.04 }
                   : reduceMotion
                     ? { opacity: 0 }
-                    : { opacity: 0, scale: 1.16, x: "2%" }
+                    : { opacity: 0, scale: 1.08 }
               }
               animate={
                 reduceMotion
@@ -83,12 +117,10 @@ export function Hero({ content }: { content: HeroContent }) {
                   : {
                       opacity: 1,
                       scale: 1,
-                      x: 0,
                       transition: {
-                        opacity: { duration: 1.15, ease: [0.22, 1, 0.36, 1] },
-                        x: { duration: 1.25, ease: [0.22, 1, 0.36, 1] },
+                        opacity: { duration: 1.05, ease: [0.22, 1, 0.36, 1] },
                         scale: {
-                          duration: multiple ? SLIDE_MS / 1000 : 1.4,
+                          duration: multiple ? SLIDE_MS / 1000 : 1.35,
                           ease: multiple ? "linear" : [0.22, 1, 0.36, 1],
                         },
                       },
@@ -99,10 +131,9 @@ export function Hero({ content }: { content: HeroContent }) {
                   ? { opacity: 0, transition: { duration: 0.01 } }
                   : {
                       opacity: 0,
-                      scale: 1.08,
-                      x: "-1.5%",
+                      scale: 1.03,
                       transition: {
-                        duration: 1.15,
+                        duration: 0.9,
                         ease: [0.22, 1, 0.36, 1],
                       },
                     }
@@ -110,7 +141,7 @@ export function Hero({ content }: { content: HeroContent }) {
               transition={
                 reduceMotion
                   ? { duration: 0.01 }
-                  : { duration: 1.15, ease: [0.22, 1, 0.36, 1] }
+                  : { duration: 1.05, ease: [0.22, 1, 0.36, 1] }
               }
             >
               <Image
@@ -120,7 +151,7 @@ export function Hero({ content }: { content: HeroContent }) {
                 priority={index === 0}
                 sizes="100vw"
                 unoptimized={active.remote}
-                className="object-cover object-[55%_25%] sm:object-[60%_center] brightness-[1.05] contrast-[1.02]"
+                className="object-cover object-[68%_center] brightness-[1.04] contrast-[1.02] sm:object-[72%_center]"
               />
             </motion.div>
           )}
@@ -140,7 +171,7 @@ export function Hero({ content }: { content: HeroContent }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-lime"
+          className="mb-4 max-w-full text-sm font-semibold uppercase tracking-[0.2em] text-brand-lime"
         >
           {content.eyebrow}
         </motion.p>
@@ -149,7 +180,7 @@ export function Hero({ content }: { content: HeroContent }) {
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-3xl text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
+          className="max-w-full text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:max-w-3xl sm:text-5xl lg:text-6xl break-words"
         >
           {content.title}{" "}
           <span className="text-brand-lime">{content.titleAccent}</span>
