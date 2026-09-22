@@ -49,6 +49,17 @@ export type SupportAction = {
   href: string;
 };
 
+/** Datos para transferencia / aporte (modal «Haz tu aporte») */
+export type BankDetails = {
+  bankName: string;
+  accountType: string;
+  accountNumber: string;
+  rut: string;
+  holderName: string;
+  email: string;
+  notes: string;
+};
+
 export type HeroSlide = {
   /** Key S3 (ej. site/hero-123.png) — preferido */
   imageKey?: string;
@@ -118,6 +129,9 @@ export type SupportContent = {
   title: string;
   body: string;
   actions: SupportAction[];
+  /** Si es true, «Haz tu aporte» abre el modal con datos bancarios */
+  donationModalEnabled: boolean;
+  bankDetails: BankDetails;
 };
 
 export type SponsorItem = {

@@ -5,5 +5,9 @@ export async function GET() {
   if (!session) {
     return Response.json({ authenticated: false }, { status: 401 });
   }
-  return Response.json({ authenticated: true, user: session.sub });
+  return Response.json({
+    authenticated: true,
+    user: session.sub,
+    role: session.role,
+  });
 }

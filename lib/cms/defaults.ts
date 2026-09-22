@@ -172,6 +172,16 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     eyebrow: "Apóyanos",
     title: "¿Por qué apoyar a Tenis Futuro?",
     body: "Apoyar a Tenis Futuro significa invertir en las nuevas generaciones. El financiamiento de empresas, instituciones y personas permitirá avanzar en infraestructura, programas de formación, equipamiento, entrenamientos y experiencias internacionales.",
+    donationModalEnabled: false,
+    bankDetails: {
+      bankName: "",
+      accountType: "Cuenta corriente",
+      accountNumber: "",
+      rut: "",
+      holderName: "",
+      email: "",
+      notes: "",
+    },
     actions: [
       {
         id: "aporte",

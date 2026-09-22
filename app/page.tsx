@@ -1,4 +1,5 @@
 import { AboutSection } from "@/components/about-section";
+import { DonationProvider } from "@/components/donation-aporte";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
@@ -39,7 +40,7 @@ export default async function Home() {
   }
 
   return (
-    <>
+    <DonationProvider support={content.support}>
       <Header logoSrc={resolveSiteLogoUrl(settings)} />
       <main className="flex-1">
         <Hero content={content.hero} />
@@ -52,6 +53,6 @@ export default async function Home() {
         <SponsorsSection content={content.sponsors} />
       </main>
       <Footer />
-    </>
+    </DonationProvider>
   );
 }

@@ -103,6 +103,14 @@ function mergeContent(doc?: Partial<SiteContent> | null): SiteContent {
         doc?.support?.actions?.length
           ? doc.support.actions
           : DEFAULT_SITE_CONTENT.support.actions,
+      donationModalEnabled:
+        typeof doc?.support?.donationModalEnabled === "boolean"
+          ? doc.support.donationModalEnabled
+          : DEFAULT_SITE_CONTENT.support.donationModalEnabled,
+      bankDetails: {
+        ...DEFAULT_SITE_CONTENT.support.bankDetails,
+        ...(doc?.support?.bankDetails ?? {}),
+      },
     },
     sponsors: {
       ...DEFAULT_SITE_CONTENT.sponsors,
@@ -221,7 +229,14 @@ export async function updateSiteContent(
       ? { ...current.programs, ...input.programs }
       : current.programs,
     support: input.support
-      ? { ...current.support, ...input.support }
+      ? {
+          ...current.support,
+          ...input.support,
+          bankDetails: {
+            ...current.support.bankDetails,
+            ...(input.support.bankDetails ?? {}),
+          },
+        }
       : current.support,
     sponsors: input.sponsors
       ? { ...current.sponsors, ...input.sponsors }

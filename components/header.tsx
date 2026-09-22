@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { DonationAporteButton } from "@/components/donation-aporte";
 
 const NAV = [
   { href: "#inicio", label: "Inicio" },
@@ -82,13 +83,13 @@ export function Header({ logoSrc }: { logoSrc?: string }) {
         </nav>
 
         <div className="flex items-center gap-3">
-          <a
-            href="#apoyanos"
+          <DonationAporteButton
+            fallbackHref="#apoyanos"
             className="hidden items-center gap-2 rounded-md bg-brand-lime px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-brand-navy transition hover:bg-brand-lime-dark sm:inline-flex"
           >
             <HeartIcon className="h-4 w-4" />
             Haz tu aporte
-          </a>
+          </DonationAporteButton>
 
           <button
             type="button"
@@ -133,14 +134,14 @@ export function Header({ logoSrc }: { logoSrc?: string }) {
                   {item.label}
                 </a>
               ))}
-              <a
-                href="#apoyanos"
-                onClick={() => setOpen(false)}
+              <DonationAporteButton
+                fallbackHref="#apoyanos"
+                onNavigate={() => setOpen(false)}
                 className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-brand-lime px-4 py-3 text-sm font-bold uppercase text-brand-navy"
               >
                 <HeartIcon className="h-4 w-4" />
                 Haz tu aporte
-              </a>
+              </DonationAporteButton>
             </div>
           </motion.nav>
         ) : null}

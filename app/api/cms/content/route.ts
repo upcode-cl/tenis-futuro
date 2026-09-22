@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
-import { isAdminAuthorized, unauthorizedResponse } from "@/lib/auth-admin";
+import {
+  getAuthorizedAdminSession,
+  isFullAdmin,
+  unauthorizedResponse,
+} from "@/lib/auth-admin";
 import { getSiteContent, updateSiteContent } from "@/lib/db/cms";
 import type { SiteContent } from "@/lib/cms/types";
 
@@ -18,10 +22,22 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!(await isAdminAuthorized(request))) return unauthorizedResponse();
+  const session = await getAuthorizedAdminSession(request);
+  if (!session) return unauthorizedResponse();
 
   try {
     const body = (await request.json()) as Partial<SiteContent>;
+
+    // Datos bancarios y flag del modal: solo rol admin
+    if (body.support && !isFullAdmin(session)) {
+      const current = await getSiteContent();
+      body.support = {
+        ...body.support,
+        bankDetails: current.support.bankDetails,
+        donationModalEnabled: current.support.donationModalEnabled,
+      };
+    }
+
     const content = await updateSiteContent(body);
     revalidatePath("/");
     revalidatePath("/admin/contenido");

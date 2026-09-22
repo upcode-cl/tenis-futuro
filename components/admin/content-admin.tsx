@@ -15,6 +15,7 @@ import type { SiteContent } from "@/lib/cms/types";
 import { resolvePublicObjectUrl } from "@/lib/s3-public";
 
 type Tab = "hero" | "about" | "programs" | "support" | "sponsors";
+type AdminRole = "admin" | "editor";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "hero", label: "Hero" },
@@ -24,9 +25,32 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "sponsors", label: "Sponsors" },
 ];
 
+function withSupportDefaults(content: SiteContent): SiteContent {
+  return {
+    ...content,
+    support: {
+      ...DEFAULT_SITE_CONTENT.support,
+      ...content.support,
+      bankDetails: {
+        ...DEFAULT_SITE_CONTENT.support.bankDetails,
+        ...(content.support?.bankDetails ?? {}),
+      },
+      donationModalEnabled:
+        typeof content.support?.donationModalEnabled === "boolean"
+          ? content.support.donationModalEnabled
+          : DEFAULT_SITE_CONTENT.support.donationModalEnabled,
+      actions:
+        content.support?.actions?.length > 0
+          ? content.support.actions
+          : DEFAULT_SITE_CONTENT.support.actions,
+    },
+  };
+}
+
 export function ContentAdmin() {
   const [tab, setTab] = useState<Tab>("hero");
   const [form, setForm] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
+  const [role, setRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,14 +59,23 @@ export function ContentAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [portraitSlideKeys, setPortraitSlideKeys] = useState<string[]>([]);
 
+  const isAdmin = role === "admin";
+
   useEffect(() => {
     fetch("/api/cms/content")
       .then((r) => r.json())
       .then((d) => {
-        if (d.content) setForm(d.content);
+        if (d.content) setForm(withSupportDefaults(d.content));
       })
       .catch(() => setError("No se pudo cargar el contenido"))
       .finally(() => setLoading(false));
+
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.role === "admin" || d.role === "editor") setRole(d.role);
+      })
+      .catch(() => setRole(null));
 
     fetch("/api/uploads/site-image")
       .then((r) => r.json())
@@ -104,7 +137,7 @@ export function ContentAdmin() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
-      setForm(data.content);
+      setForm(withSupportDefaults(data.content));
       setMessage("Contenido guardado. El sitio público se actualizó.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar");
@@ -994,6 +1027,176 @@ export function ContentAdmin() {
                 })
               }
             />
+
+            {isAdmin ? (
+              <div className="space-y-4 rounded-xl border border-brand-navy/15 bg-brand-slate/50 p-4">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-brand-navy">
+                    Modal «Haz tu aporte» — datos bancarios
+                  </h3>
+                  <p className="mt-1 text-xs text-brand-muted">
+                    Solo el administrador puede habilitar el modal y editar los
+                    datos de transferencia que verán los visitantes.
+                  </p>
+                </div>
+
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-brand-navy/10 bg-white px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={form.support.donationModalEnabled}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          donationModalEnabled: e.target.checked,
+                        },
+                      })
+                    }
+                    className="mt-0.5 h-4 w-4 accent-brand-navy"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-brand-navy">
+                      Habilitar modal de aporte
+                    </span>
+                    <span className="mt-0.5 block text-xs text-brand-muted">
+                      Si está activo, el botón «Haz tu aporte» abre el modal con
+                      estos datos. Si está desactivado, el botón vuelve a
+                      navegar a la sección Apóyanos / Contacto.
+                    </span>
+                  </span>
+                </label>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Banco"
+                    value={form.support.bankDetails.bankName}
+                    placeholder="Ej. Banco de Chile"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            bankName: v,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Field
+                    label="Tipo de cuenta"
+                    value={form.support.bankDetails.accountType}
+                    placeholder="Cuenta corriente / Vista / Ahorro"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            accountType: v,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Field
+                    label="Número de cuenta"
+                    value={form.support.bankDetails.accountNumber}
+                    placeholder="000000000"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            accountNumber: v,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Field
+                    label="RUT"
+                    value={form.support.bankDetails.rut}
+                    placeholder="12.345.678-9"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            rut: v,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Field
+                    label="Nombre del titular"
+                    value={form.support.bankDetails.holderName}
+                    placeholder="Fundación Tenis Futuro"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            holderName: v,
+                          },
+                        },
+                      })
+                    }
+                    className="sm:col-span-2"
+                  />
+                  <Field
+                    label="Email (comprobantes)"
+                    value={form.support.bankDetails.email}
+                    placeholder="aporte@tenisfuturo.cl"
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        support: {
+                          ...form.support,
+                          bankDetails: {
+                            ...form.support.bankDetails,
+                            email: v,
+                          },
+                        },
+                      })
+                    }
+                    className="sm:col-span-2"
+                  />
+                </div>
+                <Area
+                  label="Notas / instrucciones (opcional)"
+                  value={form.support.bankDetails.notes}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      support: {
+                        ...form.support,
+                        bankDetails: {
+                          ...form.support.bankDetails,
+                          notes: v,
+                        },
+                      },
+                    })
+                  }
+                  rows={3}
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                Los datos bancarios y la activación del modal de aporte solo
+                pueden configurarlos usuarios con rol <strong>administrador</strong>.
+              </div>
+            )}
           </div>
         )}
 

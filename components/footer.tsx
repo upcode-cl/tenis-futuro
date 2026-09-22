@@ -1,8 +1,13 @@
 "use client";
 
 import { FadeIn } from "@/components/fade-in";
+import {
+  DonationAporteButton,
+  useDonationAporte,
+} from "@/components/donation-aporte";
 
 export function Footer() {
+  const donation = useDonationAporte();
   return (
     <footer id="contacto" className="relative bg-brand-navy-deep text-white">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -65,14 +70,46 @@ export function Footer() {
                 ["Noticias", "#noticias"],
               ]}
             />
-            <FooterCol
-              title="Apóyanos"
-              links={[
-                ["Por qué apoyar", "#apoyanos"],
-                ["Haz tu aporte", "#contacto"],
-                ["Colaborar", "#contacto"],
-              ]}
-            />
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-brand-lime">
+                Apóyanos
+              </h3>
+              <ul className="mt-4 space-y-2.5">
+                <li>
+                  <a
+                    href="#apoyanos"
+                    className="text-sm text-white/70 transition hover:text-brand-lime"
+                  >
+                    Por qué apoyar
+                  </a>
+                </li>
+                <li>
+                  {donation?.enabled ? (
+                    <DonationAporteButton
+                      fallbackHref="#contacto"
+                      className="text-sm text-white/70 transition hover:text-brand-lime"
+                    >
+                      Haz tu aporte
+                    </DonationAporteButton>
+                  ) : (
+                    <a
+                      href="#contacto"
+                      className="text-sm text-white/70 transition hover:text-brand-lime"
+                    >
+                      Haz tu aporte
+                    </a>
+                  )}
+                </li>
+                <li>
+                  <a
+                    href="#contacto"
+                    className="text-sm text-white/70 transition hover:text-brand-lime"
+                  >
+                    Colaborar
+                  </a>
+                </li>
+              </ul>
+            </div>
           </FadeIn>
 
           <FadeIn delay={0.16}>

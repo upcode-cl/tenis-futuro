@@ -11,8 +11,10 @@ export default function AdminContentPage() {
   return (
     <AdminShell title="Contenido del sitio">
       <p className="mb-6 text-sm text-brand-muted">
-        Edita Hero, Quiénes somos, Programas y Apóyanos. Al guardar, el home
-        público se actualiza desde MongoDB.
+        Edita Hero, Quiénes somos, Programas y Apóyanos. En Apóyanos, el
+        administrador puede cargar datos bancarios y activar o desactivar el
+        modal de «Haz tu aporte». Al guardar, el home público se actualiza desde
+        MongoDB.
       </p>
       <ContentAdmin />
     </AdminShell>

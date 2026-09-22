@@ -1,9 +1,15 @@
 "use client";
 
 import { FadeIn, Stagger, StaggerItem } from "@/components/fade-in";
+import {
+  DonationAporteButton,
+  useDonationAporte,
+} from "@/components/donation-aporte";
 import type { SupportContent } from "@/lib/cms/types";
 
 export function SupportSection({ content }: { content: SupportContent }) {
+  const donation = useDonationAporte();
+
   return (
     <section id="apoyanos" className="bg-brand-slate py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -21,24 +27,39 @@ export function SupportSection({ content }: { content: SupportContent }) {
         </FadeIn>
 
         <Stagger className="mt-12 grid gap-8 md:grid-cols-3">
-          {content.actions.map((action) => (
-            <StaggerItem key={action.id}>
-              <article className="flex h-full flex-col border-t-2 border-brand-lime pt-6">
-                <h3 className="text-xl font-extrabold uppercase text-brand-navy">
-                  {action.title}
-                </h3>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-brand-muted text-justify text-justify-site">
-                  {action.body}
-                </p>
-                <a
-                  href={action.href}
-                  className="mt-6 inline-flex items-center justify-center rounded-md bg-brand-lime px-4 py-3 text-sm font-bold uppercase tracking-wide text-brand-navy transition hover:bg-brand-lime-dark"
-                >
-                  {action.cta}
-                </a>
-              </article>
-            </StaggerItem>
-          ))}
+          {content.actions.map((action) => {
+            const isAporte =
+              action.id === "aporte" ||
+              action.href === "#aporte" ||
+              /aporte/i.test(action.title);
+            const ctaClassName =
+              "mt-6 inline-flex items-center justify-center rounded-md bg-brand-lime px-4 py-3 text-sm font-bold uppercase tracking-wide text-brand-navy transition hover:bg-brand-lime-dark";
+
+            return (
+              <StaggerItem key={action.id}>
+                <article className="flex h-full flex-col border-t-2 border-brand-lime pt-6">
+                  <h3 className="text-xl font-extrabold uppercase text-brand-navy">
+                    {action.title}
+                  </h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-brand-muted text-justify text-justify-site">
+                    {action.body}
+                  </p>
+                  {isAporte && donation?.enabled ? (
+                    <DonationAporteButton
+                      className={ctaClassName}
+                      fallbackHref={action.href}
+                    >
+                      {action.cta}
+                    </DonationAporteButton>
+                  ) : (
+                    <a href={action.href} className={ctaClassName}>
+                      {action.cta}
+                    </a>
+                  )}
+                </article>
+              </StaggerItem>
+            );
+          })}
         </Stagger>
       </div>
     </section>
