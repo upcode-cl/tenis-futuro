@@ -209,7 +209,8 @@ function Info({
 }
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
+  // Fechas solo-día (YYYY-MM-DD): mediodía UTC evita desfase a día anterior en Chile
+  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("es-CL", {
     year: "numeric",
